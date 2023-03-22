@@ -25,7 +25,8 @@ jobs:
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: app/src/package-lock.json
+        cache: 'npm'
+        cache-dependancy-path: app/src/package-lock.json
     - run: npm ci
     - run: npm run build --if-present
     - run: npm test
