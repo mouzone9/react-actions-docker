@@ -1,36 +1,31 @@
-name: proxy
+# This workflow will do a clean installation of node dependencies, cache/restore them, build the source code and run tests across different versions of node
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-nodejs
+
+name: Node.js CI
 
 on:
-  pull_request:
-    paths-ignore:
-      - '**.md'
   push:
-    branches:
-      - main
-      - releases/*
-    paths-ignore:
-      - '**.md'
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
 jobs:
-  test-proxy:
+  build:
+
     runs-on: ubuntu-latest
-    container:
-      image: ubuntu:latest
-      options: --dns 127.0.0.1
-    services:
-      squid-proxy:
-        image: ubuntu/squid:latest
-        ports:
-          - 3128:3128
-    env:
-      https_proxy: http://squid-proxy:3128
+
+    strategy:
+      matrix:
+        node-version: [14.x, 16.x, 18.x]
+        # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
+
     steps:
-      - uses: actions/checkout@v3
-      - name: Clear tool cache
-        run: rm -rf $RUNNER_TOOL_CACHE/*
-      - name: Setup node 16
-        uses: ./
-        with:
-          node-version: 16
-      - name: Verify node and npm
-        run: __tests__/verify-node.sh 16
+    - uses: actions/checkout@v3
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v3
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm test
